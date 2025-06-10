@@ -94,106 +94,142 @@
     .hidden {
       display: none;
     }
+
+    #auth {
+      max-width: 400px;
+      margin: 100px auto;
+      padding: 30px;
+      background: white;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+      text-align: center;
+      border-radius: 8px;
+    }
+
+    #auth input {
+      padding: 10px;
+      width: 70%;
+      font-size: 14px;
+      margin-top: 10px;
+    }
   </style>
 </head>
 <body>
 
-  <!-- Navbar -->
-  <div class="navbar">
-    <h1>Jio BP Control Room</h1>
-    <div class="menu">
-      <button onclick="showSection('reportSection')">Report</button>
-      <button onclick="showSection('downloadSection')">Download</button>
+  <!-- Password Authentication -->
+  <div id="auth">
+    <h2>Access Restricted</h2>
+    <p>Please enter the access code</p>
+    <input type="password" id="accessCode" placeholder="Enter code" />
+    <br><br>
+    <button class="button" onclick="checkCode()">Enter</button>
+  </div>
+
+  <!-- Protected Content (Shift Form + Download) -->
+  <div id="mainContent" class="hidden">
+    <!-- Navbar -->
+    <div class="navbar">
+      <h1>Jio BP Control Room</h1>
+      <div class="menu">
+        <button onclick="showSection('reportSection')">Report</button>
+        <button onclick="showSection('downloadSection')">Download</button>
+      </div>
+    </div>
+
+    <!-- Report Section -->
+    <div id="reportSection" class="container">
+      <h2>Shift Report</h2>
+      <form id="shiftForm">
+        <label>Date</label>
+        <input type="date" name="date" required>
+
+        <label>Shift Type</label>
+        <select name="shiftType" required>
+          <option value="">Select</option>
+          <option>A</option><option>B</option><option>C</option><option>D</option><option>E</option>
+        </select>
+
+        <label>Control Room</label>
+        <select name="controlRoom" required>
+          <option value="">Select</option>
+          <option>Reliance</option><option>RIL Solid</option><option>JIO-BP</option>
+          <option>ATGL</option><option>DPL</option><option>NAYARA</option>
+        </select>
+
+        <label>In-Charge Name</label>
+        <input type="text" name="incharge" required>
+
+        <label>Violations Handled</label>
+        <input type="text" name="violations">
+
+        <label>Emergency Calls Attended</label>
+        <select name="emergencyCalls" onchange="toggleRemarks(this, 'emergencyRemarks')">
+          <option>No</option><option>Yes</option>
+        </select>
+
+        <textarea name="emergencyRemarks" id="emergencyRemarks" class="hidden" placeholder="Emergency remarks..."></textarea>
+
+        <label>Observations</label>
+        <textarea name="observations"></textarea>
+
+        <label>Client Communication</label>
+        <textarea name="clientComm"></textarea>
+
+        <label>Handover Time</label>
+        <input type="time" name="handoverTime" id="handoverTime">
+
+        <button class="button" type="submit">Submit Report</button>
+      </form>
+    </div>
+
+    <!-- Download Section -->
+    <div id="downloadSection" class="container hidden">
+      <h2>Download Shift Reports</h2>
+      <label for="fromDate">From</label>
+      <input type="date" id="fromDate">
+
+      <label for="toDate">To</label>
+      <input type="date" id="toDate">
+
+      <button class="button" onclick="downloadCSV()">Download CSV</button>
     </div>
   </div>
 
-  <!-- Report Section -->
-  <div id="reportSection" class="container">
-    <h2>Shift Report</h2>
-    <form id="shiftForm">
-      <label>Date</label>
-      <input type="date" name="date" required>
-
-      <label>Shift Type</label>
-      <select name="shiftType" required>
-        <option value="">Select</option>
-        <option>A</option><option>B</option><option>C</option><option>D</option><option>E</option>
-      </select>
-
-      <label>Control Room</label>
-      <select name="controlRoom" required>
-        <option value="">Select</option>
-        <option>Reliance</option><option>RIL Solid</option><option>JIO-BP</option>
-        <option>ATGL</option><option>DPL</option><option>NAYARA</option>
-      </select>
-
-      <label>In-Charge Name</label>
-      <input type="text" name="incharge" required>
-
-      <label>Violations Handled</label>
-      <input type="text" name="violations">
-
-      <label>Emergency Calls Attended</label>
-      <select name="emergencyCalls" onchange="toggleRemarks(this, 'emergencyRemarks')">
-        <option>No</option><option>Yes</option>
-      </select>
-
-      <textarea name="emergencyRemarks" id="emergencyRemarks" class="hidden" placeholder="Emergency remarks..."></textarea>
-
-      <label>Observations</label>
-      <textarea name="observations"></textarea>
-
-      <label>Client Communication</label>
-      <textarea name="clientComm"></textarea>
-
-      <label>Handover Time</label>
-      <input type="time" name="handoverTime" id="handoverTime">
-
-      <button class="button" type="submit">Submit Report</button>
-    </form>
-  </div>
-
-  <!-- Download Section -->
-  <div id="downloadSection" class="container hidden">
-    <h2>Download Shift Reports</h2>
-    <label for="fromDate">From</label>
-    <input type="date" id="fromDate">
-
-    <label for="toDate">To</label>
-    <input type="date" id="toDate">
-
-    <button class="button" onclick="downloadCSV()">Download CSV</button>
-  </div>
-
   <script>
+    // Access code logic
+    function checkCode() {
+      const enteredCode = document.getElementById("accessCode").value;
+      const correctCode = "jio123"; // 🔒 Set your secure code
+
+      if (enteredCode === correctCode) {
+        document.getElementById("auth").classList.add("hidden");
+        document.getElementById("mainContent").classList.remove("hidden");
+      } else {
+        alert("Invalid access code.");
+      }
+    }
+
     const scriptURL = 'https://script.google.com/macros/s/AKfycbwIkE6BZDZNYmcARzrqMr8FfDZnFrHNVHBR7kWoL7WdkIy6kRDB9KwX5RSypeKUoXmkow/exec';
 
-   document.getElementById("shiftForm").addEventListener("submit", function (e) {
-  e.preventDefault();
+    document.getElementById("shiftForm").addEventListener("submit", function (e) {
+      e.preventDefault();
 
-  // Auto-fill handover time
-  const now = new Date();
-  const hours = String(now.getHours()).padStart(2, '0');
-  const minutes = String(now.getMinutes()).padStart(2, '0');
-  document.getElementById("handoverTime").value = `${hours}:${minutes}`;
+      const now = new Date();
+      const hours = String(now.getHours()).padStart(2, '0');
+      const minutes = String(now.getMinutes()).padStart(2, '0');
+      document.getElementById("handoverTime").value = `${hours}:${minutes}`;
 
-  const form = new FormData(this);
-  fetch(scriptURL, {
-    method: "POST",
-    body: new URLSearchParams(form)
-  })
-    .then(res => res.text())
-    .then(msg => {
-      alert(msg);
-      location.reload(); // 🔁 Page refresh after submission
-    })
-    .catch(err => alert("Error: " + err.message));
-});
-
-
-
-
-
+      const form = new FormData(this);
+      fetch(scriptURL, {
+        method: "POST",
+        body: new URLSearchParams(form)
+      })
+        .then(res => res.text())
+        .then(msg => {
+          alert(msg);
+          location.reload();
+        })
+        .catch(err => alert("Error: " + err.message));
+    });
 
     function toggleRemarks(selectElem, textareaId) {
       const area = document.getElementById(textareaId);
