@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Shift Report - Jio BP Control Room</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f2f2f2;
+      margin: 0;
+      padding: 0;
+    }
+
+    .navbar {
+      background: linear-gradient(90deg, #0f9d58, #34a853);
+      padding: 15px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      color: white;
+    }
+
+    .navbar h1 {
+      font-size: 20px;
+      margin: 0;
+    }
+
+    .menu {
+      display: flex;
+      gap: 10px;
+    }
+
+    .menu button {
+      background-color: white;
+      color: #0f9d58;
+      border: none;
+      padding: 8px 15px;
+      border-radius: 5px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background 0.3s, color 0.3s;
+    }
+
+    .menu button:hover {
+      background-color: #e6ffe6;
+      color: #0b7e44;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: 30px auto;
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+    }
+
+    h2 {
+      text-align: center;
+      color: #0f9d58;
+    }
+
+    label {
+      display: block;
+      margin-top: 15px;
+      font-weight: bold;
+    }
+
+    input, select, textarea {
+      width: 100%;
+      padding: 8px;
+      margin-top: 5px;
+      border-radius: 4px;
+      border: 1px solid #ccc;
+      font-size: 14px;
+    }
+
+    .button {
+      margin-top: 20px;
+      background: #0f9d58;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      font-size: 16px;
+      cursor: pointer;
+      border-radius: 5px;
+      transition: background 0.3s;
+    }
+
+    .button:hover {
+      background: #0b7e44;
+    }
+
+    .hidden {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Navbar -->
+  <div class="navbar">
+    <h1>Jio BP Control Room</h1>
+    <div class="menu">
+      <button onclick="showSection('reportSection')">Report</button>
+      <button onclick="showSection('downloadSection')">Download</button>
+    </div>
+  </div>
+
+  <!-- Report Section -->
+  <div id="reportSection" class="container">
+    <h2>Shift Report</h2>
+    <form id="shiftForm">
+      <label>Date</label>
+      <input type="date" name="date" required>
+
+      <label>Shift Type</label>
+      <select name="shiftType" required>
+        <option value="">Select</option>
+        <option>A</option><option>B</option><option>C</option><option>D</option><option>E</option>
+      </select>
+
+      <label>Control Room</label>
+      <select name="controlRoom" required>
+        <option value="">Select</option>
+        <option>Reliance</option><option>RIL Solid</option><option>JIO-BP</option>
+        <option>ATGL</option><option>DPL</option><option>NAYARA</option>
+      </select>
+
+      <label>In-Charge Name</label>
+      <input type="text" name="incharge" required>
+
+      <label>Violations Handled</label>
+      <input type="text" name="violations">
+
+      <label>Emergency Calls Attended</label>
+      <select name="emergencyCalls" onchange="toggleRemarks(this, 'emergencyRemarks')">
+        <option>No</option><option>Yes</option>
+      </select>
+
+      <textarea name="emergencyRemarks" id="emergencyRemarks" class="hidden" placeholder="Emergency remarks..."></textarea>
+
+      <label>Observations</label>
+      <textarea name="observations"></textarea>
+
+      <label>Client Communication</label>
+      <textarea name="clientComm"></textarea>
+
+      <label>Handover Time</label>
+      <input type="time" name="handoverTime" id="handoverTime">
+
+      <button class="button" type="submit">Submit Report</button>
+    </form>
+  </div>
+
+  <!-- Download Section -->
+  <div id="downloadSection" class="container hidden">
+    <h2>Download Shift Reports</h2>
+    <label for="fromDate">From</label>
+    <input type="date" id="fromDate">
+
+    <label for="toDate">To</label>
+    <input type="date" id="toDate">
+
+    <button class="button" onclick="downloadCSV()">Download CSV</button>
+  </div>
+
+  <script>
+    const scriptURL = 'https://script.google.com/macros/s/AKfycbwIkE6BZDZNYmcARzrqMr8FfDZnFrHNVHBR7kWoL7WdkIy6kRDB9KwX5RSypeKUoXmkow/exec';
+
+   document.getElementById("shiftForm").addEventListener("submit", function (e) {
+  e.preventDefault();
+
+  // Auto-fill handover time
+  const now = new Date();
+  const hours = String(now.getHours()).padStart(2, '0');
+  const minutes = String(now.getMinutes()).padStart(2, '0');
+  document.getElementById("handoverTime").value = `${hours}:${minutes}`;
+
+  const form = new FormData(this);
+  fetch(scriptURL, {
+    method: "POST",
+    body: new URLSearchParams(form)
+  })
+    .then(res => res.text())
+    .then(msg => {
+      alert(msg);
+      location.reload(); // 🔁 Page refresh after submission
+    })
+    .catch(err => alert("Error: " + err.message));
+});
+
+
+
+
+
+
+    function toggleRemarks(selectElem, textareaId) {
+      const area = document.getElementById(textareaId);
+      area.classList.toggle("hidden", selectElem.value !== "Yes");
+    }
+
+    function downloadCSV() {
+      const from = document.getElementById("fromDate").value;
+      const to = document.getElementById("toDate").value;
+      if (!from || !to) return alert("Please select both dates.");
+
+      const url = `${scriptURL}?action=downloadCSV&from=${from}&to=${to}`;
+      fetch(url)
+        .then(res => res.blob())
+        .then(blob => {
+          const a = document.createElement('a');
+          a.href = URL.createObjectURL(blob);
+          a.download = `ShiftReport_${from}_to_${to}.csv`;
+          a.click();
+        })
+        .catch(err => alert("Download error: " + err.message));
+    }
+
+    function showSection(sectionId) {
+      document.getElementById("reportSection").classList.add("hidden");
+      document.getElementById("downloadSection").classList.add("hidden");
+      document.getElementById(sectionId).classList.remove("hidden");
+    }
+
+    // Default view
+    showSection('reportSection');
+  </script>
+</body>
+</html>
